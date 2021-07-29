@@ -1,0 +1,10 @@
+{
+    "Debug" : true,
+    "ServerAddress" : "5.35.243.170",
+    "TestServerAddress" : "10.0.2.10",
+    "FoveationLevel"    : 2,
+    "ShowFpsCounter"    : true,
+    "PlayerRole"        : 0,
+    "SnapTurnAngles"    : 20,
+    "WalkSpeed"         : 6
+}

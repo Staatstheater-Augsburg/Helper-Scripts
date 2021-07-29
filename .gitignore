@@ -1,0 +1,10 @@
+venv
+
+platform-tools/darwin/*
+!platform-tools/darwin/.keep
+
+platform-tools/win32/*
+!platform-tools/win32/.keep
+
+data/builds/*
+!data/builds/.keep
