@@ -1,7 +1,7 @@
 {
     "ScreenoffDelay": 2,
     "SleepDelay": 60,
-    "CalibrateOnBoot": 1,
+    "CalibrateOnBoot": 0,
     "FPSLimit": 60,
     "ResetPoseOnWake": 1
 }
