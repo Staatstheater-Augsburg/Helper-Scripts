@@ -47,6 +47,10 @@ def main(argv):
     client = AdbClient(host='127.0.0.1', port=5037)
     devices = client.devices()
 
+    if len(devices) == 0:
+        print('- no devices found\n')
+        return
+
     # load config files
     with open('data/config.json', 'r') as file:
         data = file.read()
