@@ -3,17 +3,34 @@
 
 # Development
 
-## Create a Python environment
-```bash
-python3 -m venv venv
-. venv/bin/activate
-```
+## Create a Python environment and activate it
+
+Linux/macOS
+
+    python3 -m venv venv
+    . venv/bin/activate
+
+Windows
+
+    py -m venv venv
+    .\venv\Scripts\activate
+
+## Update pip
+
+Linux / macOS
+
+    pip install --upgrade pip
+
+Windows
+
+    .\venv\Scripts\python.exe -m pip install --upgrade pip
+
 
 ## Install dependencies
 
-    pip install --upgrade pip
     pip install pysftp requests
     pip install -U pure-python-adb
+    
 
 
 ## Get Android SDK platform tools

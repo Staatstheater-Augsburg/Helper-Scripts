@@ -1,12 +1,9 @@
-#!/bin/bash
-'true' '''\'
-exec '$(dirname '$(readlink '$0')')'/venv/bin/python3 '$0' '$@'
-'''
+#!/usr/bin/env python3
 
-# https://github.com/Swind/pure-python-adb
-
+from tkinter import *
+from tkinter import filedialog
 import sys
-from sys import platform
+import platform
 from ppadb.client import Client as AdbClient
 import json
 import sys
@@ -15,41 +12,155 @@ import os
 import glob
 
 
-# Fields
-devices = None
-app_config = None
-device_config = None
-options = {}
-needs_reboot = False
-player_roles = {
-    'audience': 0,
-    'actor': 1,
-    'technician': 2
-}
+class SetupGui:
+    headline_font = ('Helvetica', 12, 'bold')
+    font = ('Helvetica', 12)
+
+    def __init__(self, root):
+        self.options = {
+            'install': IntVar(value=0),
+            'role': IntVar(value=0),
+            'set_kiosk_mode': IntVar(value=0),
+            'kiosk_mode': IntVar(value=0)
+        }
+
+        self.create_widgets(root)
+        return
+
+    def create_widgets(self, root):
+        settings_frame = Frame(root).pack(
+            side=RIGHT,
+            fill=BOTH,
+            expand=False
+        )
+
+        log_frame = Frame(root, bg='grey')
+        log_frame.pack(
+            side=LEFT,
+            fill=BOTH,
+            expand=True
+        )
+
+        # Install
+
+        Checkbutton(settings_frame,
+                    text='Neues APK installieren',
+                    font=self.headline_font,
+                    variable=self.options['install']).pack(
+                        anchor=W,
+                        pady=(20, 0),
+                        padx=(20, 20))
+
+        # Rolle
+
+        Label(settings_frame,
+              text="Rolle",
+              font=self.headline_font,
+              justify=LEFT).pack(
+            anchor=W,
+            pady=(20, 5),
+            padx=(20, 20))
+
+        Radiobutton(settings_frame,
+                    text='Gast',
+                    font=self.font,
+                    padx=40,
+                    variable=self.options['role'],
+                    value=0).pack(anchor=W)
+
+        Radiobutton(settings_frame,
+                    text='Darsteller',
+                    font=self.font,
+                    padx=40,
+                    variable=self.options['role'],
+                    value=1).pack(anchor=W)
+
+        Radiobutton(settings_frame,
+                    text='Techniker',
+                    font=self.font,
+                    padx=40,
+                    variable=self.options['role'],
+                    value=2).pack(anchor=W)
+
+        # Kiosk mode
+
+        Checkbutton(settings_frame,
+                    text='Kiosk-Modus ändern',
+                    font=self.headline_font,
+                    variable=self.options['set_kiosk_mode']).pack(
+                        anchor=W,
+                        pady=(20, 0),
+                        padx=(20, 20))
+
+        Radiobutton(settings_frame,
+                    text='An',
+                    font=self.font,
+                    padx=40,
+                    variable=self.options['kiosk_mode'],
+                    value=0).pack(anchor=W)
+
+        Radiobutton(settings_frame,
+                    text='Aus',
+                    font=self.font,
+                    padx=40,
+                    variable=self.options['kiosk_mode'],
+                    value=1).pack(anchor=W)
+
+        # Go button
+
+        Button(settings_frame,
+               text='Konfiguration starten',
+               command=start_setup,
+               relief=FLAT,
+               fg="white", activeforeground="white",
+               bg="#e5017b", activebackground="#fe1f96",
+               font=self.font).pack(
+            anchor=SW,
+            expand=True,
+            pady=(40, 40),
+            padx=(20, 20))
+
+        # Log
+
+        self.log_text = Text(log_frame,
+                             wrap=WORD,
+                             height=1, width=1,
+                             bg='grey',
+                             padx=20, pady=20)
+        scroll = Scrollbar(log_frame)
+        self.log_text.configure(yscrollcommand=scroll.set)
+        scroll.configure(command=self.log_text.yview)
+        self.log_text.pack(side=LEFT, fill=BOTH, expand=True)
+        scroll.pack(side=RIGHT, fill=Y)
+
+    def log(self, message, new_line=True):
+        self.log_text.insert(END, message)
+        if new_line:
+            self.log_text.insert(END, '\n')
+
+    def clear_log(self):
+        self.log_text.delete("1.0", "end")
 
 
-def main(argv):
-    os.system('clear')
-
-    print('\n------------------------')
-    print('🍍 VR Theater setup tool')
-    print('------------------------\n')
-
-    get_options(argv)
+def start_setup():
+    gui.clear_log()
+    gui.log('🍍 Starte konfiguration...\n')
 
     # start server
-    if platform == "darwin":
+    if platform.system() == 'Darwin' or platform.system() == 'Linux':
         os.system('platform-tools/darwin/adb devices')
     else:
-        os.system('platform-tools/wind32/adb.exe devices')
+        os.system('platform-tools\win32\\adb.exe devices')
 
     # start client
     client = AdbClient(host='127.0.0.1', port=5037)
     devices = client.devices()
 
     if len(devices) == 0:
-        print('- no devices found\n')
+        gui.log('Keine Brillen gefunden')
         return
+    else:
+        gui.log(str(len(devices)) + ' Brillen gefunden')
 
     # load config files
     with open('data/config.json', 'r') as file:
@@ -61,113 +172,102 @@ def main(argv):
     device_config = json.loads(data)
 
     # create temp app config file
-    if 'role' in options:
-        app_config['PlayerRole'] = player_roles[options['role'].lower()]
+    app_config['PlayerRole'] = gui.options['role'].get()
+
     with open('data/tmp/config.json', 'w') as outfile:
         json.dump(app_config, outfile, indent=4)
 
+    # get apk to install
+    if gui.options['install'].get() == 1:
+        apk = filedialog.askopenfilename(
+            title='Welches APK soll installiert werden?',
+            initialdir='data/builds',
+            filetypes=[("VR App", ".apk")]
+        )
+        if apk == '':
+            gui.log('Kein APK ausgewählt, Installation abgebrochen')
+            return
+
     # setup devices
     for i, device in enumerate(devices):
-        print('Device ' + str(i+1) + ' / ' + str(len(devices)))
+        gui.log('Brille ' + str(i+1) + ' / ' + str(len(devices)))
 
         # install app
-        if 'install' in options:
-            install(device)
+        if gui.options['install'].get() == 1:
+            # uninstall
+            if(device.is_installed('de.vollstock.VRTheater')):
+                gui.log('\t - deinstalliere altes APK')
+                device.uninstall('de.vollstock.VRTheater')
+
+            # install
+            gui.log('\t - installiere ' + apk)
+            device.install(apk)
 
         # push app config file
-        print('\t - copy app config')
+        gui.log('\t - kopiere App Konfiguration')
         device.push('data/tmp/config.json',
                     '/storage/emulated/0/Android/data/de.vollstock.VRTheater/files/config.json')
 
         # grant app permission
-        print('\t - set app permissions')
-        device.shell('pm grant de.vollstock.VRTheater android.permission.ACCESS_FINE_LOCATION')
-        device.shell('pm grant de.vollstock.VRTheater android.permission.android.permission.WRITE_EXTERNAL_STORAGE')
-        device.shell('pm grant de.vollstock.VRTheater android.permission.READ_EXTERNAL_STORAGE')
-        device.shell('pm grant de.vollstock.VRTheater android.permission.RECORD_AUDIO')
+        gui.log('\t - setze App Berechtigungen')
+        device.shell(
+            'pm grant de.vollstock.VRTheater android.permission.ACCESS_FINE_LOCATION')
+        device.shell(
+            'pm grant de.vollstock.VRTheater android.permission.android.permission.WRITE_EXTERNAL_STORAGE')
+        device.shell(
+            'pm grant de.vollstock.VRTheater android.permission.READ_EXTERNAL_STORAGE')
+        device.shell(
+            'pm grant de.vollstock.VRTheater android.permission.RECORD_AUDIO')
 
         # device config
-        print('\t - configure device')
-        device.shell('setprop persist.psensor.screenoff.delay ' + str(device_config['ScreenoffDelay']))
-        device.shell('setprop persist.psensor.sleep.delay ' + str(device_config['SleepDelay']))
-        device.shell('setprop persist.pvr.openrecenter ' + str(device_config['CalibrateOnBoot']))
-        device.shell('setprop persist.pvr.config.target_fps ' + str(device_config['FPSLimit']))
-        device.shell('setprop persist.pvr.psensor.reset_pose ' + str(device_config['ResetPoseOnWake']))
+        gui.log('\t - konfiguriere Brille')
+        device.shell('setprop persist.psensor.screenoff.delay ' +
+                     str(device_config['ScreenoffDelay']))
+        device.shell('setprop persist.psensor.sleep.delay ' +
+                     str(device_config['SleepDelay']))
+        device.shell('setprop persist.pvr.openrecenter ' +
+                     str(device_config['CalibrateOnBoot']))
+        device.shell('setprop persist.pvr.config.target_fps ' +
+                     str(device_config['FPSLimit']))
+        device.shell('setprop persist.pvr.psensor.reset_pose ' +
+                     str(device_config['ResetPoseOnWake']))
         device.shell('setprop persist.pvrpermission.autogrant 1')
 
         # kiosk
-        if 'kiosk' in options:
-            set_kiosk_mode(device, options['kiosk'])
+        if gui.options['set_kiosk_mode'].get() == 1:
+            enable = gui.options['kiosk_mode'].get() == 1
+            enable_string = 'aktiviere' if enable else 'deaktiviere'
+            gui.log('\t - ' + enable_string + ' Kiosk-Mode')
+            if(enable):
+                device.push('data/config.txt', '/storage/self/primary/config.txt')
+                device.push('data/SystemKeyConfig.prop',
+                            '/data/local/tmp/SystemKeyConfig.prop')
+            else:
+                device.shell('rm /storage/self/primary/config.txt')
+                device.shell('rm /data/local/tmp/SystemKeyConfig.prop')
+
+            needs_reboot = True
 
         # reboot
         if(needs_reboot):
-            print('\t - reboot device')
+            gui.log('\t - Brille wird neu gestartet')
             device.shell('reboot')
 
-    os.remove("data/tmp/config.json")
+    os.remove('data/tmp/config.json')
 
-    print('\ndone')
-
-
-def get_options(argv):
-    try:
-        opts, args = getopt.getopt(
-            argv, 'ik:r:', ['install', 'kiosk=', 'role='])
-    except getopt.GetoptError:
-        print_usage()
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ('-i', '--install'):
-            options['install'] = True
-        elif opt in ('-k', '--kiosk'):
-            options['kiosk'] = arg == '1'
-        elif opt in ('-r', '--role'):
-            options['role'] = arg
-        else:
-            print_usage()
-            sys.exit()
+    gui.log('\nfertig')
 
 
-def print_usage():
-    print('Usage: python '+__file__+' [options]')
-    print('  -i, --install           Install a new APK on the device')
-    print('  -k, --kiosk <enable>    1 = enable, 0 = disable')
-    print('  -r, --role <role>       "Audience" (default), "Actor" or "Technician"')
-    print('\n')
+def main():
+
+    root = Tk()
+    root.title("VR-Brillen Setup")
+    root.minsize(640, 480)
+
+    global gui
+    gui = SetupGui(root)
+
+    root.mainloop()
 
 
-def install(device):
-    apks = glob.glob('data/builds/*.apk')
-    
-    if len(apks) == 0:
-        print('\t - no APK found')
-        return
-
-    # uninstall
-    if(device.is_installed('de.vollstock.VRTheater')):
-        print('\t - uninstalling old APK')
-        device.uninstall('de.vollstock.VRTheater')
-
-    # install
-    print('\t - installing ' + apks[0])
-    device.install(apks[0])
-
-
-def set_kiosk_mode(device, enable):
-    global needs_reboot
-
-    enable_string = 'enable' if enable else 'disable'
-    print('\t - ' + enable_string + ' kiosk mode')
-    if(enable):
-        device.push('data/config.txt', '/storage/self/primary/config.txt')
-        device.push('data/SystemKeyConfig.prop',
-                    '/data/local/tmp/SystemKeyConfig.prop')
-    else:
-        device.shell('rm /storage/self/primary/config.txt')
-        device.shell('rm /data/local/tmp/SystemKeyConfig.prop')
-
-    needs_reboot = True
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
+main()
