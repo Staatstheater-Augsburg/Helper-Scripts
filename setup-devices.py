@@ -2,14 +2,10 @@
 
 from tkinter import *
 from tkinter import filedialog
-import sys
 import platform
 from ppadb.client import Client as AdbClient
 import json
-import sys
-import getopt
 import os
-import glob
 
 
 class SetupGui:
@@ -36,6 +32,7 @@ class SetupGui:
 
         log_frame = Frame(root, bg='grey')
         log_frame.pack(
+            padx=0, pady=0,
             side=LEFT,
             fill=BOTH,
             expand=True
@@ -64,23 +61,20 @@ class SetupGui:
         Radiobutton(settings_frame,
                     text='Gast',
                     font=self.font,
-                    padx=40,
                     variable=self.options['role'],
-                    value=0).pack(anchor=W)
+                    value=0).pack(anchor=W, padx=40)
 
         Radiobutton(settings_frame,
                     text='Darsteller',
                     font=self.font,
-                    padx=40,
                     variable=self.options['role'],
-                    value=1).pack(anchor=W)
+                    value=1).pack(padx=40, anchor=W)
 
         Radiobutton(settings_frame,
                     text='Techniker',
                     font=self.font,
-                    padx=40,
                     variable=self.options['role'],
-                    value=2).pack(anchor=W)
+                    value=2).pack(padx=40, anchor=W)
 
         # Kiosk mode
 
@@ -89,36 +83,39 @@ class SetupGui:
                     font=self.headline_font,
                     variable=self.options['set_kiosk_mode']).pack(
                         anchor=W,
-                        pady=(20, 0),
+                        pady=(20, 5),
                         padx=(20, 20))
 
         Radiobutton(settings_frame,
                     text='An',
                     font=self.font,
-                    padx=40,
                     variable=self.options['kiosk_mode'],
-                    value=0).pack(anchor=W)
+                    value=0).pack(padx=40, anchor=W)
 
         Radiobutton(settings_frame,
                     text='Aus',
                     font=self.font,
-                    padx=40,
                     variable=self.options['kiosk_mode'],
-                    value=1).pack(anchor=W)
+                    value=1).pack(padx=40, anchor=W)
 
         # Go button
 
-        Button(settings_frame,
-               text='Konfiguration starten',
-               command=start_setup,
-               relief=FLAT,
-               fg="white", activeforeground="white",
-               bg="#e5017b", activebackground="#fe1f96",
-               font=self.font).pack(
+        button = Button(settings_frame,
+                        text='Konfiguration starten',
+                        command=start_setup,
+                        relief=FLAT,
+                        font=self.font)
+        button.pack(
             anchor=SW,
+            fill=X,
             expand=True,
-            pady=(40, 40),
+            pady=(40, 20),
             padx=(20, 20))
+
+        if platform.system() != 'Darwin':
+            button.configure({
+                'fg': "white", 'activeforeground': "white",
+                'bg': "#e5017b", 'activebackground': "#fe1f96"})
 
         # Log
 
@@ -137,14 +134,20 @@ class SetupGui:
         self.log_text.insert(END, message)
         if new_line:
             self.log_text.insert(END, '\n')
+        root.update()
 
     def clear_log(self):
         self.log_text.delete("1.0", "end")
+        root.update()
 
 
 def start_setup():
+    global root
     gui.clear_log()
-    gui.log('🍍 Starte konfiguration...\n')
+    gui.log('🍍  \n')
+    gui.log('Starte konfiguration...\n')
+
+    needs_reboot = False
 
     # start server
     if platform.system() == 'Darwin' or platform.system() == 'Linux':
@@ -157,10 +160,10 @@ def start_setup():
     devices = client.devices()
 
     if len(devices) == 0:
-        gui.log('Keine Brillen gefunden')
+        gui.log('Keine Brillen gefunden\n')
         return
     else:
-        gui.log(str(len(devices)) + ' Brillen gefunden')
+        gui.log(str(len(devices)) + ' Brillen gefunden\n')
 
     # load config files
     with open('data/config.json', 'r') as file:
@@ -200,7 +203,7 @@ def start_setup():
                 device.uninstall('de.vollstock.VRTheater')
 
             # install
-            gui.log('\t - installiere ' + apk)
+            gui.log('\t - installiere ' + os.path.basename(apk))
             device.install(apk)
 
         # push app config file
@@ -239,7 +242,8 @@ def start_setup():
             enable_string = 'aktiviere' if enable else 'deaktiviere'
             gui.log('\t - ' + enable_string + ' Kiosk-Mode')
             if(enable):
-                device.push('data/config.txt', '/storage/self/primary/config.txt')
+                device.push('data/config.txt',
+                            '/storage/self/primary/config.txt')
                 device.push('data/SystemKeyConfig.prop',
                             '/data/local/tmp/SystemKeyConfig.prop')
             else:
@@ -259,7 +263,7 @@ def start_setup():
 
 
 def main():
-
+    global root
     root = Tk()
     root.title("VR-Brillen Setup")
     root.minsize(640, 480)
