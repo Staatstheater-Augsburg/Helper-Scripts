@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#!/bin/bash
+"true" '''\'
+exec "$(dirname "$(readlink "$0")")"/venv/bin/python3 "$0" "$@"
+'''
 
 from tkinter import *
 from tkinter import filedialog
@@ -90,13 +93,13 @@ class SetupGui:
                     text='An',
                     font=self.font,
                     variable=self.options['kiosk_mode'],
-                    value=0).pack(padx=40, anchor=W)
+                    value=1).pack(padx=40, anchor=W)
 
         Radiobutton(settings_frame,
                     text='Aus',
                     font=self.font,
                     variable=self.options['kiosk_mode'],
-                    value=1).pack(padx=40, anchor=W)
+                    value=0).pack(padx=40, anchor=W)
 
         # Go button
 
