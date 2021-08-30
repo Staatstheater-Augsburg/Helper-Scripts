@@ -5,18 +5,24 @@
 
 ### Automated Server deployment
 
+![Server deploy](docs/Server-deploy.png)
+
+Make a copy of the `.env.example` file for each server you want to deploy to and change all variables.
+
 Run from command line
 
 Linux/macOS
 
-    ./venv/bin/python deploy-server.py
+    ./venv/bin/python deploy-server.py -e <environment>
 
 Windows
 
-    .\venv\Scripts\python.exe deploy-server.py
+    .\venv\Scripts\python.exe deploy-server.py \e <environment>
 
 
 ### VR Device configuration tool
+
+![Screenshot device setup](docs/Screenshot-device-setup.png)
 
 The setup tool will configure all Pico devices attached to the computer. This way bulk installation of multiple devices is automated and becomes less painful.
 
@@ -64,6 +70,7 @@ Windows
 
 ### Install dependencies
 
+    pip install python-dotenv
     pip install pysftp requests
     pip install -U pure-python-adb
     

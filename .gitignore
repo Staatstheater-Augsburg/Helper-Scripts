@@ -1,5 +1,8 @@
 venv
 
+.env*
+!.env.example
+
 platform-tools/darwin/*
 !platform-tools/darwin/.keep
 

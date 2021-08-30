@@ -1,64 +1,94 @@
 #!/bin/bash
-"true" '''\'
-exec "$(dirname "$(readlink "$0")")"/venv/bin/python3 "$0" "$@"
+'true' '''\'
+exec '$(dirname '$(readlink '$0')')'/venv/bin/python3 '$0' '$@'
 '''
 
 import os
 import pysftp
 import requests
 import sys
+import getopt
 import math
 import glob
+from dotenv import dotenv_values
 
-myHostname = "5.35.243.170"
-# myHostname = "10.0.2.10"
-myUsername = "vollstock"
-myPassword = "_Ywb92kvJ7-KIxeL"
-myPort = 33322
-remote_path = "/opt/game-server/"
-script_path = os.getcwd()
+import pprint
+# script_path = os.getcwd()
 
 
-def deploy():
+def print_usage():
+    print('usage: python deploy-server.py -e <environment>')
+
+
+def deploy(argv):
+
+    # get command line parameters
+    environment = None
+
+    try:
+        opts, args = getopt.getopt(argv, 'e:', ['environment='])
+    except getopt.GetoptError:
+        print_usage()
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt == '-h':
+            print_usage()
+            sys.exit()
+        elif opt in ('-e', '--environment'):
+            environment = arg
+
+    if (not environment):
+        print_usage()
+        sys.exit(2)
+
     os.system('clear')
     print('\n---------------------------------------')
-    print("🍍 Deploying the VR Theater Game Server")
+    print('🍍 Deploying the VR Theater Game Server')
     print('---------------------------------------\n')
-    print("Connection...                  ", end=" ", flush=True)
 
+    # get environment variables
+    config = dotenv_values('.env.' + environment)
+    if(not config):
+        print('Environment file not found: .env.' + environment)
+        sys.exit(2)
+    print('Environment...                 ', environment)
+
+    print('Connection...                  ', end=' ', flush=True)
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None
-    with pysftp.Connection(host=myHostname, username=myUsername, password=myPassword, port=myPort, cnopts=cnopts) as sftp:
-        sftp.cwd(remote_path)
-        print("established")
+    with pysftp.Connection(host=config['SERVER_IP'], username=config['USER'], password=config['PASSWORD'], port=int(config['PORT']), cnopts=cnopts) as sftp:
+        sftp.cwd(config['REMOTE_PATH'])
+        print('established')
 
-        print("Stopping server...             ", end=" ", flush=True)
-        r = requests.get("http://" + myHostname + ":5000/stop")
+        print('Stopping server...             ', end=' ', flush=True)
+        r = requests.get('http://' + config['SERVER_IP'] + ':5000/stop')
         print(r.text.strip())
 
         zips = glob.glob('data/builds/*.zip')
 
-        print("Deleting old files...          ", end=" ", flush=True)
-        sftp.execute("rm -fr "+remote_path+".*")
-        sftp.execute("rm -fr "+remote_path+"*")
-        print("done")
+        print('Deleting old files...          ', end=' ', flush=True)
+        sftp.execute('rm -fr '+config['REMOTE_PATH']+'.*')
+        sftp.execute('rm -fr '+config['REMOTE_PATH']+'*')
+        print('done')
 
         if len(zips) == 0:
             print(' - no server ZIP found')
-            return
+            sys.exit(2)
 
-        print("Uploading new files...")
+        print('Uploading new files...')
         sftp.put(zips[0], callback=lambda x, y: progressbar(x, y))
-        print("")
+        print('')
 
-        print("Unpacking remote files...      ", end=" ", flush=True)
-        sftp.execute("unzip "+remote_path+"build.zip -d "+remote_path)
-        sftp.execute("rm "+remote_path+"build.zip")
-        sftp.chmod("game-server.x86_64", 775)
-        print("done")
+        print('Unpacking remote files...      ', end=' ', flush=True)
+        sftp.execute('unzip '+config['REMOTE_PATH'] +
+                     os.path.basename(zips[0]) + ' -d ' + config['REMOTE_PATH'])
+        sftp.execute('rm '+config['REMOTE_PATH'] + os.path.basename(zips[0]))
+        sftp.chmod('game-server.x86_64', 775)
+        print('done')
 
-        print("Starting server...             ", end=" ", flush=True)
-        r = requests.get("http://" + myHostname + ":5000/start")
+        print('Starting server...             ', end=' ', flush=True)
+        r = requests.get('http://' + config['SERVER_IP'] + ':5000/start')
         print(r.text)
 
 
@@ -86,4 +116,5 @@ def format_bytes(size):
     return '{0:.2f}'.format(size) + ' ' + power_labels[n] + 'B'
 
 
-deploy()
+if __name__ == '__main__':
+    deploy(sys.argv[1:])
