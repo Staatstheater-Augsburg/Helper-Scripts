@@ -9,9 +9,11 @@
 #the value 1 means the key action is do the defined action
 #the value 0 means the key action is do nothing
 #if you want use system default config, please delete it
-action_home_single_tap=5
-action_home_double_tap=5
-action_home_long_press=6
+
+action_home_single_tap=0
+# action_home_double_tap=0
+# action_home_long_press=1
+
 #the value 1 means back 
 #action_power_press=1
 #time_home_double_tap=400

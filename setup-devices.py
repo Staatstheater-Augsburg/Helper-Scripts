@@ -179,6 +179,8 @@ def start_setup():
 
     # create temp app config file
     app_config['PlayerRole'] = gui.options['role'].get()
+    if app_config['PlayerRole'] is not 0:
+        app_config['VoiceChatEnabled'] = True
 
     with open('data/tmp/config.json', 'w') as outfile:
         json.dump(app_config, outfile, indent=4)

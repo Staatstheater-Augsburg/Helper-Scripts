@@ -18,7 +18,7 @@ import pprint
 
 def print_usage():
     print('usage: python deploy-server.py -e <environment>')
-
+    
 
 def deploy(argv):
 
@@ -42,6 +42,7 @@ def deploy(argv):
         print_usage()
         sys.exit(2)
 
+
     os.system('clear')
     print('\n---------------------------------------')
     print('🍍 Deploying the VR Theater Game Server')
@@ -57,16 +58,22 @@ def deploy(argv):
     print('Connection...                  ', end=' ', flush=True)
     cnopts = pysftp.CnOpts()
     cnopts.hostkeys = None
-    with pysftp.Connection(host=config['SERVER_IP'], username=config['USER'], password=config['PASSWORD'], port=int(config['PORT']), cnopts=cnopts) as sftp:
+    with pysftp.Connection(host=config['SERVER_IP'],
+                           username=config['USER'],
+                           password=config['PASSWORD'],
+                           port=int(config['PORT']),
+                           cnopts=cnopts) as sftp:
         sftp.cwd(config['REMOTE_PATH'])
         print('established')
 
+        # Stop
         print('Stopping server...             ', end=' ', flush=True)
         r = requests.get('http://' + config['SERVER_IP'] + ':5000/stop')
         print(r.text.strip())
 
-        zips = glob.glob('data/builds/*.zip')
+        zips = glob.glob('data/builds/*.zip')   
 
+        # Delete
         print('Deleting old files...          ', end=' ', flush=True)
         sftp.execute('rm -fr '+config['REMOTE_PATH']+'.*')
         sftp.execute('rm -fr '+config['REMOTE_PATH']+'*')
@@ -76,10 +83,12 @@ def deploy(argv):
             print(' - no server ZIP found')
             sys.exit(2)
 
+        # Upload
         print('Uploading new files...')
         sftp.put(zips[0], callback=lambda x, y: progressbar(x, y))
         print('')
 
+        # Unpack
         print('Unpacking remote files...      ', end=' ', flush=True)
         sftp.execute('unzip '+config['REMOTE_PATH'] +
                      os.path.basename(zips[0]) + ' -d ' + config['REMOTE_PATH'])
@@ -87,6 +96,7 @@ def deploy(argv):
         sftp.chmod('game-server.x86_64', 775)
         print('done')
 
+        # Start
         print('Starting server...             ', end=' ', flush=True)
         r = requests.get('http://' + config['SERVER_IP'] + ':5000/start')
         print(r.text)
