@@ -7,5 +7,6 @@
     "ShowFpsCounter": false,
     "VoiceChatEnabled": false,
     "SnapTurnAngles": 20,
-    "WalkSpeed": 8
+    "WalkSpeed": 6,
+    "ActorScaleFactor": 1.0
 }

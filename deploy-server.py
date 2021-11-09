@@ -45,7 +45,7 @@ def deploy(argv):
 
     os.system('clear')
     print('\n---------------------------------------')
-    print('🍍 Deploying the VR Theater Game Server')
+    print('🍍 Deploying the Elektrotheater Game Server')
     print('---------------------------------------\n')
 
     # get environment variables

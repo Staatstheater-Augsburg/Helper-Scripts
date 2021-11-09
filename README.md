@@ -1,4 +1,4 @@
-## VR Theater Helper Scripts
+## Elektrotheater Helper Scripts
 
 
 ## Usage
