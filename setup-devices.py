@@ -190,7 +190,7 @@ def start_setup():
         apk = filedialog.askopenfilename(
             title='Welches APK soll installiert werden?',
             initialdir='data/builds',
-            filetypes=[("VR App", ".apk")]
+            filetypes=[("Elektrotheater App", ".apk")]
         )
         if apk == '':
             gui.log('Kein APK ausgewählt, Installation abgebrochen')
@@ -203,9 +203,9 @@ def start_setup():
         # install app
         if gui.options['install'].get() == 1:
             # uninstall
-            if(device.is_installed('de.vollstock.VRTheater')):
+            if(device.is_installed('de.vollstock.Elektrotheater')):
                 gui.log('\t - deinstalliere altes APK')
-                device.uninstall('de.vollstock.VRTheater')
+                device.uninstall('de.vollstock.Elektrotheater')
 
             # install
             gui.log('\t - installiere ' + os.path.basename(apk))
@@ -214,18 +214,18 @@ def start_setup():
         # push app config file
         gui.log('\t - kopiere App Konfiguration')
         device.push('data/tmp/config.json',
-                    '/storage/emulated/0/Android/data/de.vollstock.VRTheater/files/config.json')
+                    '/storage/emulated/0/Android/data/de.vollstock.Elektrotheater/files/config.json')
 
         # grant app permission
         gui.log('\t - setze App Berechtigungen')
         device.shell(
-            'pm grant de.vollstock.VRTheater android.permission.ACCESS_FINE_LOCATION')
+            'pm grant de.vollstock.Elektrotheater android.permission.ACCESS_FINE_LOCATION')
         device.shell(
-            'pm grant de.vollstock.VRTheater android.permission.android.permission.WRITE_EXTERNAL_STORAGE')
+            'pm grant de.vollstock.Elektrotheater android.permission.android.permission.WRITE_EXTERNAL_STORAGE')
         device.shell(
-            'pm grant de.vollstock.VRTheater android.permission.READ_EXTERNAL_STORAGE')
+            'pm grant de.vollstock.Elektrotheater android.permission.READ_EXTERNAL_STORAGE')
         device.shell(
-            'pm grant de.vollstock.VRTheater android.permission.RECORD_AUDIO')
+            'pm grant de.vollstock.Elektrotheater android.permission.RECORD_AUDIO')
 
         # device config
         gui.log('\t - konfiguriere Brille')
@@ -270,7 +270,7 @@ def start_setup():
 def main():
     global root
     root = Tk()
-    root.title("VR-Brillen Setup")
+    root.title("Elektrotheater Brillen-Setup")
     root.minsize(640, 480)
 
     global gui
