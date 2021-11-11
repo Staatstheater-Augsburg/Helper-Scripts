@@ -19,8 +19,9 @@ class SetupGui:
         self.options = {
             'install': IntVar(value=0),
             'role': IntVar(value=0),
+            'avatar': StringVar(),
             'set_kiosk_mode': IntVar(value=0),
-            'kiosk_mode': IntVar(value=0)
+            'kiosk_mode': IntVar(value=0),
         }
 
         self.create_widgets(root)
@@ -78,6 +79,20 @@ class SetupGui:
                     font=self.font,
                     variable=self.options['role'],
                     value=2).pack(padx=40, anchor=W)
+
+        # Avatar
+
+        Label(settings_frame,
+              text="Avatar",
+              font=self.headline_font,
+              justify=LEFT).pack(
+            anchor=W,
+            pady=(20, 5),
+            padx=(20, 20))
+
+        Entry(settings_frame, width=20,
+              textvariable=self.options['avatar']).pack(
+            anchor=W, padx=40)
 
         # Kiosk mode
 
@@ -181,6 +196,8 @@ def start_setup():
     app_config['PlayerRole'] = gui.options['role'].get()
     if app_config['PlayerRole'] is not 0:
         app_config['VoiceChatEnabled'] = True
+    
+    app_config['Avatar'] = gui.options['avatar'].get()
 
     with open('data/tmp/config.json', 'w') as outfile:
         json.dump(app_config, outfile, indent=4)

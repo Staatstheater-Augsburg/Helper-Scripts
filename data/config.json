@@ -1,12 +1,12 @@
 {
-    "Debug": true,
     "ServerAddress": "92.205.21.161",
     "TestServerAddress": "5.35.243.170",
     "PlayerRole": 0,
+    "Avatar": null,
+    "ActorScaleFactor": 1.0,
     "FoveationLevel": 2,
     "ShowFpsCounter": false,
     "VoiceChatEnabled": false,
     "SnapTurnAngles": 20,
-    "WalkSpeed": 6,
-    "ActorScaleFactor": 1.0
+    "WalkSpeed": 3
 }
