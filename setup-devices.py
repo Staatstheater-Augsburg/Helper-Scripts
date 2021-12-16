@@ -138,6 +138,7 @@ class SetupGui:
         # Log
 
         self.log_text = Text(log_frame,
+                             font=self.font,
                              wrap=WORD,
                              height=1, width=1,
                              bg='grey',
@@ -149,6 +150,7 @@ class SetupGui:
         scroll.pack(side=RIGHT, fill=Y)
 
     def log(self, message, new_line=True):
+        print(message)
         self.log_text.insert(END, message)
         if new_line:
             self.log_text.insert(END, '\n')
@@ -194,7 +196,7 @@ def start_setup():
 
     # create temp app config file
     app_config['PlayerRole'] = gui.options['role'].get()
-    if app_config['PlayerRole'] is not 0:
+    if app_config['PlayerRole'] != 0:
         app_config['VoiceChatEnabled'] = True
     
     app_config['Avatar'] = gui.options['avatar'].get()
