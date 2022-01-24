@@ -19,6 +19,7 @@ class SetupGui:
         self.options = {
             'install': IntVar(value=0),
             'role': IntVar(value=0),
+            'voiceChat': BooleanVar(value=0),
             'avatar': StringVar(),
             'set_kiosk_mode': IntVar(value=0),
             'kiosk_mode': IntVar(value=0),
@@ -63,23 +64,40 @@ class SetupGui:
             padx=(20, 20))
 
         Radiobutton(settings_frame,
-                    text='Gast',
+                    text='Gast (G2)',
                     font=self.font,
                     variable=self.options['role'],
                     value=0).pack(anchor=W, padx=40)
 
         Radiobutton(settings_frame,
-                    text='Darsteller',
+                    text='Darsteller (Neo 3)',
                     font=self.font,
                     variable=self.options['role'],
                     value=1).pack(padx=40, anchor=W)
 
         Radiobutton(settings_frame,
-                    text='Techniker',
+                    text='Techniker (G2)',
                     font=self.font,
                     variable=self.options['role'],
                     value=2).pack(padx=40, anchor=W)
 
+        # Voice Chat
+
+        Label(settings_frame,
+              text="Voice Chat",
+              font=self.headline_font,
+              justify=LEFT).pack(
+            anchor=W,
+            pady=(20, 5),
+            padx=(20, 20))
+
+        Checkbutton(settings_frame,
+                    text='aktivieren',
+                    font=self.font,
+                    variable=self.options['voiceChat']).pack(
+                        anchor=W, padx=40)
+        
+        
         # Avatar
 
         Label(settings_frame,
@@ -164,7 +182,7 @@ class SetupGui:
 def start_setup():
     global root
     gui.clear_log()
-    gui.log('🍍  \n')
+    gui.log('🍍 👓 \n')
     gui.log('Starte konfiguration...\n')
 
     needs_reboot = False
@@ -193,13 +211,16 @@ def start_setup():
     with open('data/device.json', 'r') as file:
         data = file.read()
     device_config = json.loads(data)
+    
 
     # create temp app config file
     app_config['PlayerRole'] = gui.options['role'].get()
-    if app_config['PlayerRole'] != 0:
-        app_config['VoiceChatEnabled'] = True
-    
+    app_config['VoiceChatEnabled'] = gui.options['voiceChat'].get()
     app_config['Avatar'] = gui.options['avatar'].get()
+    
+    # disable ResetPoseOnWake for actors using a Neo3
+    if app_config['PlayerRole'] == 1:
+        device_config['ResetPoseOnWake'] = 0
 
     with open('data/tmp/config.json', 'w') as outfile:
         json.dump(app_config, outfile, indent=4)

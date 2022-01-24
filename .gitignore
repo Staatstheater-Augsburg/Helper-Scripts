@@ -11,3 +11,5 @@ platform-tools/win32/*
 
 data/builds/*
 !data/builds/.keep
+
+.DS_Store
